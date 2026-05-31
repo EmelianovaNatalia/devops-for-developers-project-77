@@ -1,5 +1,5 @@
 ---
-- name: Setup web servers with Docker
+- name: Setup web servers
   hosts: webservers
   become: yes
   tasks:
@@ -18,10 +18,15 @@
         state: started
         enabled: yes
 
+    - name: Pull nginx image
+      docker_image:
+        name: nginx
+        source: pull
+
     - name: Run nginx container
       docker_container:
         name: webapp
-        image: nginx:latest
+        image: nginx
         ports:
           - "80:80"
         restart_policy: always
