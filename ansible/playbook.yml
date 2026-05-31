@@ -1,0 +1,58 @@
+---
+- name: Setup web servers with Docker
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Start Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Run nginx container
+      docker_container:
+        name: webapp
+        image: nginx:latest
+        ports:
+          - "80:80"
+        restart_policy: always
+
+- name: Setup load balancer
+  hosts: loadbalancer
+  become: yes
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Configure nginx as load balancer
+      template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/sites-available/default
+      notify: restart nginx
+
+    - name: Enable site
+      file:
+        src: /etc/nginx/sites-available/default
+        dest: /etc/nginx/sites-enabled/default
+        state: link
+
+  handlers:
+    - name: restart nginx
+      systemd:
+        name: nginx
+        state: restarted
