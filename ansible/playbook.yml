@@ -7,16 +7,10 @@
       apt:
         update_cache: yes
 
-    - name: Install Docker
-      apt:
-        name: docker.io
-        state: present
-
-    - name: Start Docker service
-      systemd:
+    - name: Install Docker via snap
+      snap:
         name: docker
-        state: started
-        enabled: yes
+        classic: yes
 
     - name: Pull nginx image
       docker_image:
@@ -55,6 +49,12 @@
         src: /etc/nginx/sites-available/default
         dest: /etc/nginx/sites-enabled/default
         state: link
+
+    - name: Ensure nginx is running
+      systemd:
+        name: nginx
+        state: started
+        enabled: yes
 
   handlers:
     - name: restart nginx
